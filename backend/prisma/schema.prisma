@@ -1,0 +1,28 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ExerciseType {
+  Running
+  StrengthTraining
+  Cycling
+  Walking
+  Swimming
+  Other
+}
+
+model Workout {
+  id              String       @id @default(uuid())
+  name            String
+  exerciseType    ExerciseType
+  durationMinutes Int
+  date            DateTime     @db.Date
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
