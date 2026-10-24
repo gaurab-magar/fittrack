@@ -28,43 +28,58 @@ export function DashboardView() {
   function showFeedback(type: Feedback["type"], message: string) {
     setFeedback({ type, message });
   }
-
-  function handleSubmit(input: WorkoutInput) {
+  async function handleSubmit(input: WorkoutInput) {
+  try {
     if (editingId) {
       const existing = getById(editingId);
+
       if (!existing) {
-        showFeedback("error", "That workout could not be found. It may already have been deleted.");
+        showFeedback("error", "Workout not found. It may have been deleted.");
         setEditingId(null);
         return;
       }
 
-      update(editingId, input);
+      await update(editingId, input);
       setEditingId(null);
       showFeedback("success", "Workout updated.");
       return;
     }
 
-    create(input);
+    await create(input);
     showFeedback("success", "Workout added.");
+  } catch (error) {
+    showFeedback(
+      "error",
+      error instanceof Error ? error.message : "Could not save workout.",
+    );
   }
+}
 
   function handleEdit(id: string) {
     setEditingId(id);
     document.getElementById("workout-form")?.scrollIntoView({ behavior: "smooth" });
   }
 
-  function confirmDelete() {
-    if (!pendingDeleteId) {
-      return;
-    }
+  async function confirmDelete() {
+  if (!pendingDeleteId) return;
 
-    remove(pendingDeleteId);
+  try {
+    await remove(pendingDeleteId);
+
     if (editingId === pendingDeleteId) {
       setEditingId(null);
     }
+
     setPendingDeleteId(null);
     showFeedback("success", "Workout deleted.");
+  } catch (error) {
+    showFeedback(
+      "error",
+      error instanceof Error ? error.message : "Could not delete workout.",
+    );
+    setPendingDeleteId(null);
   }
+}
 
   return (
     <>
