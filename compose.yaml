@@ -1,4 +1,3 @@
-
 services:
   db:
     image: postgres:17
@@ -12,6 +11,34 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fittrack -d fittrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: fittrack-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://fittrack:local_dev_password@db:5432/fittrack?schema=public
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+    container_name: fittrack-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
