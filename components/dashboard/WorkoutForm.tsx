@@ -66,6 +66,13 @@ function WorkoutFormFields({
     editingWorkout ? formFromWorkout(editingWorkout) : createEmptyForm(),
   );
   const [errors, setErrors] = useState<WorkoutFieldErrors>({});
+  const [buttonPosition, setButtonPosition] = useState({
+  x: 0,
+  y: 0,
+});
+const returnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const isFormValid = validateWorkoutForm(form).ok;
 
   useEffect(() => {
     if (editingWorkout || window.location.hash === "#workout-form") {
@@ -79,6 +86,29 @@ function WorkoutFormFields({
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
   }
+    function moveButton() {
+    if (isFormValid) return;
+
+    setButtonPosition({
+      x: Math.random() * 400 - 200,
+      y: Math.random() * 200 - 100,
+    });
+  }
+  function handleButtonMouseEnter() {
+  if (isFormValid) return;
+
+  if (returnTimer.current) {
+    clearTimeout(returnTimer.current);
+  }
+
+  moveButton();
+}
+
+function handleButtonMouseLeave() {
+  returnTimer.current = setTimeout(() => {
+    setButtonPosition({ x: 0, y: 0 });
+  }, 700);
+}
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -210,8 +240,35 @@ function WorkoutFormFields({
             ) : null}
           </div>
         </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+  <div className="relative">
+    <Button
+      type="submit"
+      className="cursor-pointer"
+      onMouseEnter={handleButtonMouseEnter}
+      onMouseLeave={handleButtonMouseLeave}
+      onClick={(event) => {
+        if (!isFormValid) {
+          event.preventDefault();
+          moveButton();
+        }
+      }}
+      style={{
+        transform: `translate(${buttonPosition.x}px, ${buttonPosition.y}px)`,
+        transition: "transform 350ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+      }}
+    >
+      Add
+    </Button>
+  </div>
 
-        <div className="flex flex-wrap gap-3">
+  {editingWorkout ? (
+    <Button variant="secondary" onClick={onCancelEdit}>
+      Cancel Edit
+    </Button>
+  ) : null}
+</div>
+        {/* <div className="flex flex-wrap gap-3">
           <Button type="submit">
             {editingWorkout ? "Save Changes" : "Add Workout"}
           </Button>
@@ -220,7 +277,7 @@ function WorkoutFormFields({
               Cancel Edit
             </Button>
           ) : null}
-        </div>
+        </div> */}
       </form>
     </section>
   );

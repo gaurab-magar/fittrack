@@ -30,8 +30,37 @@ export function useWorkouts() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  let cancelled = false;
+
+  async function loadWorkouts() {
+    try {
+      const data = await getWorkouts();
+
+      if (!cancelled) {
+        setWorkouts(data);
+        setError(null);
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not load workouts.",
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+  }
+
+  void loadWorkouts();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   const create = useCallback(async (input: WorkoutInput) => {
     const workout = await createWorkout(input);
